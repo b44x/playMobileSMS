@@ -13,7 +13,7 @@
   $play = new PlayMobile();
   
   // Zalogowanie się na konto Play
-  var_dump($play->DoLogin('numer', 'hasl0'));
+  $play->DoLogin('numer', 'hasl0');
   
 
   if($play->SendSMS('500123123', 'tresc'))
