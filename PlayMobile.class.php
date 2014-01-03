@@ -2,7 +2,7 @@
 /**
  * @author      Michell Hoduń
  * @copyright   (c) 2010 Michell Hoduń <mhodun@gmail.com>
- * @description Klasa odpowiedzialna za wysyłanie SMS-ów z PlayMobile.pl.
+ * @description Klasa odpowiedzialna za wysyłanie SMS-ów z play.pl.
  */
 
 class PlayMobile {
@@ -12,9 +12,9 @@ class PlayMobile {
   *
   * @param string $url
   * @param array $post
-	* @param string $ref
-	* @param integer $follow
-	* @param integer $header
+  * @param string $ref
+  * @param integer $follow
+  * @param integer $header
  */
  public static function curl ($url, $post = NULL, $ref = NULL, $follow = 1, $header = 1, $post_type = NULL)
  {
@@ -29,26 +29,23 @@ class PlayMobile {
     
     curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, FALSE);
     
-    if ( ! empty($post) )
+    if ( ! empty($post))
     {
       $postVars='';
-      
+
       foreach ($post as $option => $value)
-      {
         $postVars .= $option.'='.urlencode($value).'&';
-      }
+
         curl_setopt($ch, CURLOPT_POST, 1);
         curl_setopt($ch, CURLOPT_POSTFIELDS, $postVars);
     }
       
-    if ( $ref )
-    {
+    if($ref)
       curl_setopt($ch, CURLOPT_REFERER, $ref);
-    }
     
     curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-    curl_setopt($ch,CURLOPT_HEADER, 1);
-    curl_setopt($ch,CURLOPT_FOLLOWLOCATION, $follow);
+    curl_setopt($ch, CURLOPT_HEADER, 1);
+    curl_setopt($ch, CURLOPT_FOLLOWLOCATION, $follow);
     
     $r = curl_exec($ch);
     curl_close($ch);
@@ -64,19 +61,21 @@ class PlayMobile {
   */
   public function DoLogin ($login, $password)
   {
-    $BeforePost = array('SAMLRequest' => $this->GetGateway(), 'target'=> 'https://bramka.playmobile.pl');
+    $BeforePost = array('SAMLRequest' => $this->GetGateway(), 'target'=> 'https://bramka.play.pl');
     
-    $content = $this->curl('https://logowanie.playmobile.pl/p4-idp2/SSOrequest.do', $BeforePost, 'https://bramka.playmobile.pl/composer/public/mmsCompose.do');
+    $content = $this->curl('https://logowanie.play.pl/p4-idp2/SSOrequest.do', $BeforePost, 'https://bramka.play.pl/composer/public/mmsCompose.do');
     
     preg_match('/name="random" value="(.+?)"/', $content, $rand);
     $post = array('step' => 1, 'next' => 'Next', 'random' =>$rand[1], 'login' =>$login, 'password' =>$password);
     
     // Właściwe zalogowanie się
-    $LoginDO = $this->curl('https://logowanie.playmobile.pl/p4-idp2/Login.do',$post,'',0);
-    $samlLog_Post = array('SAMLResponse' => $this->SAMLResponse($LoginDO), 'target'=>'https://bramka.playmobile.pl');
-    $this->curl('https://bramka.playmobile.pl/composer/samlLog?action=sso', $samlLog_Post, 'https://logowanie.playmobile.pl/p4-idp2/SSOrequest.do');
+    $LoginDO = $this->curl('https://logowanie.play.pl/p4-idp2/Login.do',$post,'',0);
+
+
+    $samlLog_Post = array('SAMLResponse' => $this->SAMLResponse($LoginDO), 'target'=>'https://bramka.play.pl');
+    $this->curl('https://bramka.play.pl/composer/samlLog?action=sso', $samlLog_Post, 'https://logowanie.play.pl/p4-idp2/SSOrequest.do');
     
-    return $this->curl('https://bramka.playmobile.pl/composer/j_security_check', $samlLog_Post, 'https://bramka.playmobile.pl/composer/samlLog?action=sso');
+    return $this->curl('https://bramka.play.pl/composer/j_security_check', $samlLog_Post, 'https://bramka.play.pl/composer/samlLog?action=sso');
   }
 
  /**
@@ -84,9 +83,9 @@ class PlayMobile {
   *
   * @return $SAMLRequest
   */
-	public function GetGateway()
-	{
-    $SAML = $this->curl('https://bramka.playmobile.pl/composer/public/mmsCompose.do', NULL, '', 0, 0);
+  public function GetGateway()
+  {
+    $SAML = $this->curl('https://bramka.play.pl/composer/public/mmsCompose.do', NULL, '', 0, 0);
     
     // Wyszukaj SAMLRequest
     preg_match('/value="(.*)"/msU',$SAML,$w);
@@ -95,8 +94,8 @@ class PlayMobile {
     
     // Zwróć
     return $SAMLRequest;
-	}
-	
+  }
+  
  /**
   * Wyciągnięcie SAMLResponse z stringa (treści strony).
   *
@@ -110,17 +109,17 @@ class PlayMobile {
   
   public function SendSMS ($odbiorca, $tresc)
   {
-    $content = $this->curl('https://bramka.playmobile.pl/composer/public/editableSmsCompose.do');
+    $content = $this->curl('https://bramka.play.pl/composer/public/editableSmsCompose.do');
     
     // Wyciągnij kod 'zabezpieczający'
     preg_match('/name="randForm" value="(.+?)"/', $content, $rand);
     
     $SMS = array('recipients' => $odbiorca, 'content_in' => $tresc, 'czas' => 0, 'sendform' => 'on', 'randForm' => $rand[1], 'old_signature' => '', 'old_content' => $tresc,'content_out' => $tresc);
   
-    $content2 = $this->curl('https://bramka.playmobile.pl/composer/public/editableSmsCompose.do', $SMS);
+    $content2 = $this->curl('https://bramka.play.pl/composer/public/editableSmsCompose.do', $SMS);
     
     $SMS['SMS_SEND_CONFIRMED'] = 'Wyślij';
-    $content3 = $this->curl('https://bramka.playmobile.pl/composer/public/editableSmsCompose.do', $SMS);
+    $content3 = $this->curl('https://bramka.play.pl/composer/public/editableSmsCompose.do', $SMS);
     
     if (preg_match('/Wiadomo(.*) zosta(.*)a wys(.*)ana/',$content3))
     {

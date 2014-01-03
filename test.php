@@ -13,9 +13,10 @@
   $play = new PlayMobile();
   
   // Zalogowanie się na konto Play
-  $play->DoLogin('email@mail.pl', 'haslo');
+  var_dump($play->DoLogin('numer', 'hasl0'));
   
-  if($play->SendSMS('508111222', 'tresc'))
+
+  if($play->SendSMS('500123123', 'tresc'))
   {
     echo 'Wiadomość wysłana poprawnie';
   }
