@@ -3,7 +3,7 @@
  * @author      Michell Hoduń
  * @copyright   (c) 2010 Michell Hoduń <mhodun@gmail.com>
  * @description Klasa odpowiedzialna za wysyłanie SMS-ów z play.pl.
- 
+ *
  * ---- UPDATE: Adding support for captcha ----
  * @author      Piotr Siekierzyński
  * @copyright   15.03.2015 Piotr Siekierzyński <piotr.siekierzynski@gmail.com>
