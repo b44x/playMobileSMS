@@ -1,6 +1,7 @@
 ## Prosty przykład użycia
 ```php
 <?php
+require_once 'vendor/deathbycaptcha.php';
 require_once 'PlayMobile.class.php';
 
 $login     = '500123123'; // Nasz login na Play.pl
@@ -13,7 +14,6 @@ $wiadomosc = 'Witam! Wygląda na to, że działa :)';
  */
 PlayMobile::$dbcUser = 'NazwaUseraDBC'; // Nazwa użytkownika DeathByCaptcha
 PlayMobile::$dbcPass = 'takiehaslo'; // Nazwa użytkownika DeathByCaptcha
-require_once 'vendor/deathbycaptcha.php';
 
 if(PlayMobile::sendSms($login, $haslo, $odbiorca, $wiadomosc))
 {
