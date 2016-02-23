@@ -1,7 +1,7 @@
 <?php
 /**
  * Klasa odpowiedzialna za wysyłanie SMS-ów z play.pl.
- * W najnowszej wersji dodano obsługę captcha przez - (9kw.eu)
+ * W najnowszej wersji dodano obsługę captcha przez - (DeathByCaptcha.com)
  *
  * @author      Michell `b4x` Hoduń
  * @copyright   (c) 2010-2016 Michell Hoduń <mhodun@gmail.com>
@@ -16,8 +16,6 @@ class PlayMobile
   const ssoPage      = 'https://logowanie.play.pl/p4-idp2/SSOrequest.do';
   const securityPage = 'https://bramka.play.pl/composer/j_security_check';
   const samlLog      = 'https://bramka.play.pl/composer/samlLog?action=sso';
-
-  const NineKWAPI    = 'http://www.9kw.eu/index.cgi';
 
   public static $captchaRequired = FALSE;
 
@@ -181,7 +179,7 @@ class PlayMobile
   }
 
   /**
-   * Obsługa 9KW.eu - rozwiązywanie captcha
+   * Obsługa DBC - rozwiązywanie captcha
    * @param string $captchaUrl
    */
   public static function fixCaptcha($captchaUrl)
