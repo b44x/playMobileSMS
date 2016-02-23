@@ -1,8 +1,10 @@
 <?php
 /**
- * @author      Michell Hoduń
+ * Klasa odpowiedzialna za wysyłanie SMS-ów z play.pl.
+ * W najnowszej wersji dodano obsługę captcha przez - (9kw.eu)
+ *
+ * @author      Michell `b4x` Hoduń
  * @copyright   (c) 2010-2016 Michell Hoduń <mhodun@gmail.com>
- * @description Klasa odpowiedzialna za wysyłanie SMS-ów z play.pl.
  */
 
 class PlayMobile
@@ -14,6 +16,14 @@ class PlayMobile
   const ssoPage      = 'https://logowanie.play.pl/p4-idp2/SSOrequest.do';
   const securityPage = 'https://bramka.play.pl/composer/j_security_check';
   const samlLog      = 'https://bramka.play.pl/composer/samlLog?action=sso';
+
+  const NineKWAPI    = 'http://www.9kw.eu/index.cgi';
+
+  public static $captchaRequired = FALSE;
+
+  public static $dbcEnabled = TRUE;
+  public static $dbcUser    = NULL; // Login DeathByCaptcha
+  public static $dbcPass    = NULL; // Hasło DeathByCaptcha
 
  /**
   * Wspomagacz dla CURL'a - ułatwienie dostępu
@@ -35,7 +45,7 @@ class PlayMobile
       CURLOPT_RETURNTRANSFER => TRUE,
       CURLOPT_COOKIEJAR      => dirname(__FILE__).'/cookie.txt',
       CURLOPT_COOKIEFILE     => dirname(__FILE__).'/cookie.txt',
-      CURLOPT_HEADER         => TRUE,
+      CURLOPT_HEADER         => FALSE,
       CURLOPT_FOLLOWLOCATION => TRUE
     ));
 
@@ -127,28 +137,29 @@ class PlayMobile
 
       $randomId = PlayMobile::getFormRandomId();
     }
-    else
-    {
-      $formParams = array(
-        'recipients'      => $recipent,
-        'content_in'      => $message,
-        'czas'            => '0',
-        'content_out'     => $message,
-        'templateId'      => '',
-        'sendform'        => 'on',
-        'composedMsg'     => '',
-        'randForm'        => $randomId,
-        'old_signature'   => '',
-        'old_content'     => $message,
-        'MessageJustSent' => 'false'
-      );
 
-      PlayMobile::curl(PlayMobile::smsPage, $formParams);
-      $formParams['SMS_SEND_CONFIRMED'] = 'Wyślij';
-      $sendSmsResult = PlayMobile::curl(PlayMobile::smsPage, $formParams);
+    $formParams = array(
+      'recipients'      => $recipent,
+      'content_in'      => $message,
+      'czas'            => '0',
+      'content_out'     => $message,
+      'templateId'      => '',
+      'sendform'        => 'on',
+      'composedMsg'     => '',
+      'randForm'        => $randomId,
+      'old_signature'   => '',
+      'old_content'     => $message,
+      'MessageJustSent' => 'false'
+    );
 
-      return preg_match('/Wiadomość została przyjęta do realizacji/i', $sendSmsResult);
-    }
+    // Ustawiamy captchę
+    if(PlayMobile::$captchaRequired AND PlayMobile::$dbcEnabled)
+      $formParams['inputCaptcha'] = PlayMobile::fixCaptcha(PlayMobile::$captchaRequired);
+
+    PlayMobile::curl(PlayMobile::smsPage, $formParams);
+    $formParams['SMS_SEND_CONFIRMED'] = 'Wyślij';
+    $sendSmsResult = PlayMobile::curl(PlayMobile::smsPage, $formParams);
+    return preg_match('/Wiadomość została przyjęta do realizacji/i', $sendSmsResult);
   }
 
   public static function getFormRandomId()
@@ -157,10 +168,39 @@ class PlayMobile
 
     preg_match('/<input\s+type="hidden"\s+name="randForm"\s+value="(\d+)">/i', $smsPageResult, $res6);
 
+    // Sprawdzamy ... być może dostaniemy captcha do rozwiązania.
+    if(preg_match('/<img class="captchaPosition" id="imgCaptcha" alt="" width="200" height="50"\s+src=(.+?)>/i', $smsPageResult, $cCheck))
+      PlayMobile::$captchaRequired = 'https://bramka.play.pl'.$cCheck[1];
+    else
+      PlayMobile::$captchaRequired = NULL;
+
     if(isset($res6[1]))
       return $res6[1];
 
     return FALSE;
+  }
+
+  /**
+   * Obsługa 9KW.eu - rozwiązywanie captcha
+   * @param string $captchaUrl
+   */
+  public static function fixCaptcha($captchaUrl)
+  {
+    $client      = new DeathByCaptcha_SocketClient(PlayMobile::$dbcUser, PlayMobile::$dbcPass);
+    $captchaFile = dirname(__FILE__) . '/captcha/' . uniqid('captcha') . '.png';
+
+    file_put_contents( $captchaFile, PlayMobile::curl($captchaUrl));
+
+    if ($captcha = $client->decode($captcha_filename, DeathByCaptcha_Client::DEFAULT_TIMEOUT))
+    {
+      @unlink($captchaFile);
+      return $captcha['text'];
+    }
+    else
+    {
+      @unlink($captchaFile);
+      return FALSE;
+    }
   }
 
 }

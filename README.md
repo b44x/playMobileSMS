@@ -1,13 +1,19 @@
 ## Prosty przykład użycia
 ```php
 <?php
-// Załadowanie klasy
 require_once 'PlayMobile.class.php';
 
 $login     = '500123123'; // Nasz login na Play.pl
-$haslo     = 'ciekawehaslo'; // Wiadomo - hasło do konta.
+$haslo     = 'ciekaweHaslo'; // Wiadomo - hasło do konta.
 $odbiorca  = '500123123'; // Numer na jaki zostanie wysłany SMS
-$wiadomosc = 'Tutaj jakaś ciekawa wiadomość :)';
+$wiadomosc = 'Witam! Wygląda na to, że działa :)';
+
+/*
+ * Konfiguracja DeathByCaptcha
+ */
+PlayMobile::$dbcUser = 'NazwaUseraDBC'; // Nazwa użytkownika DeathByCaptcha
+PlayMobile::$dbcPass = 'takiehaslo'; // Nazwa użytkownika DeathByCaptcha
+require_once 'vendor/deathbycaptcha.php';
 
 if(PlayMobile::sendSms($login, $haslo, $odbiorca, $wiadomosc))
 {
