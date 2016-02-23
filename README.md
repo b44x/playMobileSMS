@@ -9,7 +9,7 @@ $haslo     = 'ciekawehaslo'; // Wiadomo - hasło do konta.
 $odbiorca  = '500123123'; // Numer na jaki zostanie wysłany SMS
 $wiadomosc = 'Tutaj jakaś ciekawa wiadomość :)';
 
-if(PlayMobile::sendSms('NUMER', 'HASLO', 'NUMER ODBIORCY', 'Treść wiadomości'))
+if(PlayMobile::sendSms($login, $haslo, $odbiorca, $wiadomosc))
 {
   echo 'OK';
 }
