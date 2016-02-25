@@ -151,8 +151,15 @@ class PlayMobile
     );
 
     // Ustawiamy captchę
-    if(PlayMobile::$captchaRequired AND PlayMobile::$dbcEnabled)
-      $formParams['inputCaptcha'] = PlayMobile::fixCaptcha(PlayMobile::$captchaRequired);
+    if(PlayMobile::$captchaRequired) {
+      if (PlayMobile::$dbcEnabled and PlayMobile::$dbcUser) {
+        $formParams['inputCaptcha'] = PlayMobile::fixCaptcha(PlayMobile::$captchaRequired);
+      }
+      else {
+        print "Captch dbc required, but not enabled\n";
+        return false;
+      }
+    }
 
     PlayMobile::curl(PlayMobile::smsPage, $formParams);
     $formParams['SMS_SEND_CONFIRMED'] = 'Wyślij';
@@ -184,6 +191,7 @@ class PlayMobile
    */
   public static function fixCaptcha($captchaUrl)
   {
+    require_once 'vendor/deathbycaptcha.php';
     $client      = new DeathByCaptcha_SocketClient(PlayMobile::$dbcUser, PlayMobile::$dbcPass);
     $captchaFile = dirname(__FILE__) . '/captcha/' . uniqid('captcha') . '.png';
 

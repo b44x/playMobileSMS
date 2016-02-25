@@ -1,7 +1,6 @@
 ## Prosty przykład użycia
 ```php
 <?php
-require_once 'vendor/deathbycaptcha.php';
 require_once 'PlayMobile.class.php';
 
 $login     = '500123123'; // Nasz login na Play.pl
