@@ -17,9 +17,9 @@ class PlayMobile
   const securityPage = 'https://bramka.play.pl/composer/j_security_check';
   const samlLog      = 'https://bramka.play.pl/composer/samlLog?action=sso';
 
-  public static $captchaRequired = FALSE;
-
-  public static $dbcEnabled = TRUE;
+  private static $captchaRequired = FALSE;
+  public static $captchaService = NULL; // Serwis captcha deathbycaptcha.com|rucaptcha.com|2captcha.com|pixodrom.com|captcha24.com|socialink.ru|anti-captcha.com
+  public static $captchaApiKey = NULL; // APIKey to captcha service
   public static $dbcUser    = NULL; // Login DeathByCaptcha
   public static $dbcPass    = NULL; // Hasło DeathByCaptcha
 
@@ -152,7 +152,7 @@ class PlayMobile
 
     // Ustawiamy captchę
     if(PlayMobile::$captchaRequired) {
-      if (PlayMobile::$dbcEnabled and PlayMobile::$dbcUser) {
+      if (PlayMobile::$captchaService and (PlayMobile::$dbcUser or PlayMobile::$captchaApiKey)) {
         $formParams['inputCaptcha'] = PlayMobile::fixCaptcha(PlayMobile::$captchaRequired);
       }
       else {
@@ -191,16 +191,32 @@ class PlayMobile
    */
   public static function fixCaptcha($captchaUrl)
   {
-    require_once 'vendor/deathbycaptcha.php';
-    $client      = new DeathByCaptcha_SocketClient(PlayMobile::$dbcUser, PlayMobile::$dbcPass);
     $captchaFile = dirname(__FILE__) . '/captcha/' . uniqid('captcha') . '.png';
-
     file_put_contents( $captchaFile, PlayMobile::curl($captchaUrl));
 
-    if ($captcha = $client->decode($captcha_filename, DeathByCaptcha_Client::DEFAULT_TIMEOUT))
+    if (PlayMobile::$captchaService == 'deathbycaptcha.com') {
+      require_once 'vendor/deathbycaptcha.php';
+      $client  = new DeathByCaptcha_SocketClient(PlayMobile::$dbcUser, PlayMobile::$dbcPass);
+      $captcha = $client->decode($captchaFile, DeathByCaptcha_Client::DEFAULT_TIMEOUT);
+      $captcha = $captcha['text'];
+    }
+    else {
+      require_once 'vendor/Captcha.php';
+      $client = new Captcha();
+      $client->domain = PlayMobile::$captchaService;
+      $client->setApiKey(PlayMobile::$captchaApiKey);
+      if ($client->run($captchaFile)){
+        $captcha = $client->result();
+      }
+      else {
+        $captcha = NULL;
+      }
+    }
+    if ($captcha)
     {
       @unlink($captchaFile);
-      return $captcha['text'];
+      print "Captcha: $captcha\n";
+      return $captcha;
     }
     else
     {
